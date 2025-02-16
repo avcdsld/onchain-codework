@@ -8,7 +8,7 @@ const OUTPUT_CSV = "data/code_block1-1000000.csv";
 
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 const ETHERSCAN_URL = "https://api.etherscan.io/api";
-const REQUESTS_PER_SECOND = 3;
+const REQUESTS_PER_SECOND = 4;
 const SKIP_PROCESSED = true;
 
 async function getProcessedAddresses(outputCsvPath) {
@@ -117,8 +117,9 @@ async function main() {
         callCount++;
         if (callCount > REQUESTS_PER_SECOND) {
           const elapsed = Date.now() - startTime;
-          if (elapsed < 1000) {
-            await new Promise((resolve) => setTimeout(resolve, 1000 - elapsed));
+          // if (elapsed < 1000) {
+          if (elapsed < 800) {
+              await new Promise((resolve) => setTimeout(resolve, 1000 - elapsed));
           }
           startTime = Date.now();
           callCount = 1;
