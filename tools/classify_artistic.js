@@ -98,7 +98,6 @@ async function main() {
       { id: "code", title: "code" },
       { id: "artistic_score", title: "artistic_score" },
       { id: "artistic_reason", title: "artistic_reason" },
-      { id: "duplicate_of_address", title: "duplicate_of_address" },
     ],
     append: fs.existsSync(OUTPUT_CSV),
   });
@@ -119,44 +118,21 @@ async function main() {
       for (const row of records) {
         const address = row.address;
         const code = row.code;
+        const isErc20 = String(row.is_erc20) === "true";
 
         if (SKIP_PROCESSED && processedAddresses.has(address)) {
           console.log(`[SKIP-ADDR] already processed address: ${address}`);
           continue;
         }
 
-        if (code.length <= MIN_CODE_LENGTH) {
-          console.log(`[SKIP-SHORT] code is too short: ${address} (length=${code.length})`);
-          await csvWriter.writeRecords([
-            {
-              block_number: row.block_number,
-              address: address,
-              is_erc20: row.is_erc20,
-              is_erc721: row.is_erc721,
-              code: "",
-              artistic_score: "",
-              artistic_reason: "",
-              duplicate_of_address: "TOO_SHORT",
-            },
-          ]);
+        if (isErc20) {
+          console.log(`[SKIP-ERC20] skipping ERC20 token: ${address}`);
           continue;
         }
 
         if (processedCodes[code]) {
           const originalAddr = processedCodes[code];
           console.log(`[SKIP-CODE] duplicate code: ${address} (original=${originalAddr})`);
-          await csvWriter.writeRecords([
-            {
-              block_number: row.block_number,
-              address: address,
-              is_erc20: row.is_erc20,
-              is_erc721: row.is_erc721,
-              code: "",
-              artistic_score: "",
-              artistic_reason: "",
-              duplicate_of_address: originalAddr,
-            },
-          ]);
           continue;
         }
 
@@ -179,7 +155,6 @@ async function main() {
             code: code.replace(/\r?\n/g, "\\n"),
             artistic_score: score === null ? "" : score,
             artistic_reason: reason,
-            duplicate_of_address: "",
           },
         ]);
 
